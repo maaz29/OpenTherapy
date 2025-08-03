@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	{% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/chat_page.css' %}">
+</head>
+<body>
+	{% if request.user.is_client %}
+	<div style="position: absolute; top: 10px; left: 10px;">
+        <h3><a id="back-button" class="btn btn-outline-primary" href="/user/client/dashboard" onclick="sendMessageToWebSocket()">Back to Dashboard</a></h3>
+    </div>
+	{% else %}
+	<div style="position: absolute; top: 10px; left: 10px;">
+        <h3><a class="btn btn-outline-primary" href="/chat/end-session?client={{client}}" onclick="sendMessageToWebSocket()">Back to Dashboard</a></h3>
+    </div>
+	{% endif %}
+	<h1 class="pt-3" style="text-align: center">Hello , {{request.user.last_name}}.</h1>
+	{% if request.user.is_client %}
+	<h2 style="text-align: center">You are chatting with your therapist</h2>
+	{% else %}
+	<h2 style="text-align: center">You are chatting with your client</h2>
+	{% endif %}
+	<br>
+	<h2 style="text-align: center"><div id="durationContainer"></div></h2>
+	<div id="user-left-message"></div>
+	<div
+	class="chat__item__container"
+	id="id_chat_item_container"
+	style="font-size: 20px"
+	>
+	<br />
+	<br />
+	<br />
+	</div>
+	<div class="chat__send__container">
+    <input type="text" id="id_message_send_input" placeholder="Enter Message" />
+    <button type="submit" id="id_message_send_button" class="btn btn-primary mx-3 mb-2">Send</button>
+	</div>
+
+	{{ room_name|json_script:"room-name" }}
+	<script>
+		const roomName = JSON.parse(document.getElementById('room-name').textContent);
+		const chatSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/chat/chat-room/'
+            + roomName
+            + '/'
+        );
+		chatSocket.onopen = function (e) {
+			console.log("The connection was set up successfully!");
+			if ({{duration}} !== undefined){
+			chatSocket.send(JSON.stringify({ duration: {{duration}} }));}
+		};
+
+
+		chatSocket.onclose = function (e) {
+			console.log("Something unexpected happened !");
+			chatSocket.send(JSON.stringify({
+												message: "** This User Has Left The Chat **",
+												username: "{{request.user.username}}",
+												profile_image: "",
+												first_name: "{{request.user.first_name}}"
+											}));
+		};
+
+
+		document.querySelector("#id_message_send_input").focus();
+		document.querySelector("#id_message_send_input").onkeyup = function (e) {
+			if (e.keyCode == 13) {
+			document.querySelector("#id_message_send_button").click();
+			}
+		};
+		document.querySelector("#id_message_send_button").onclick = function (e) {
+			var messageInput = document.querySelector(
+			"#id_message_send_input"
+			).value;
+			chatSocket.send(JSON.stringify({
+												message: messageInput,
+												username: "{{request.user.username}}",
+												profile_image: "{{request.user.profile_image.url}}",
+												first_name: "{{request.user.first_name}}"
+											}));
+		};
+		chatSocket.onmessage = function (e) {
+			const data = JSON.parse(e.data);
+			if (data.duration !== undefined) {
+				var durationMessage = "Duration: ~" + data.duration + " minutes";
+        		document.querySelector("#durationContainer").innerHTML = durationMessage;
+			} else if(data.username === "{{request.user.username}}") {
+				var chatBubbleDiv = document.createElement('div');
+				chatBubbleDiv.className = 'chat-bubble sender';
+
+				var chatAvatarDiv = document.createElement('div');
+				chatAvatarDiv.className = 'chat-avatar';
+				var avatarImg = document.createElement('img');
+				avatarImg.src = data.profile_image;
+				chatAvatarDiv.appendChild(avatarImg);
+
+				var chatTextDiv = document.createElement('div');
+				chatTextDiv.className = 'chat-text';
+				var textParagraph = document.createElement('p');
+				textParagraph.textContent = data.message;
+				chatTextDiv.appendChild(textParagraph);
+
+				chatBubbleDiv.appendChild(chatTextDiv);
+				chatBubbleDiv.appendChild(chatAvatarDiv);
+
+				document.querySelector("#id_message_send_input").value = "";
+				var chatItemContainer = document.getElementById('id_chat_item_container');
+				chatItemContainer.appendChild(chatBubbleDiv);
+			}
+			else {
+				var chatBubbleDiv = document.createElement('div');
+				chatBubbleDiv.className = 'chat-bubble receiver';
+
+				var chatAvatarDiv = document.createElement('div');
+				chatAvatarDiv.className = 'chat-avatar';
+				var avatarImg = document.createElement('img');
+				avatarImg.src = data.profile_image;
+				chatAvatarDiv.appendChild(avatarImg);
+
+				var chatTextDiv = document.createElement('div');
+				chatTextDiv.className = 'chat-text';
+				var textParagraph = document.createElement('p');
+				textParagraph.textContent = data.message;
+				chatTextDiv.appendChild(textParagraph);
+
+				chatBubbleDiv.appendChild(chatAvatarDiv);
+				chatBubbleDiv.appendChild(chatTextDiv);
+
+				document.querySelector("#id_message_send_input").value = "";
+				var chatItemContainer = document.getElementById('id_chat_item_container');
+				chatItemContainer.appendChild(chatBubbleDiv);
+			}
+		};
+
+		document.querySelector("#back-button").onclick = function (e) {
+			chatSocket.send(JSON.stringify({
+												message: "** This User Has Left The Chat **",
+												username: "{{request.user.username}}",
+												profile_image: "",
+												first_name: "{{request.user.first_name}}"
+											}));
+		};
+		document.querySelector("#logout-button").onclick = function (e) {
+			chatSocket.close();
+			};
+
+		function sendMessageToWebSocket() {
+			chatSocket.send(JSON.stringify({
+												message: "** This User Has Left The Chat **",
+												username: "{{request.user.username}}",
+												profile_image: "",
+												first_name: "{{request.user.first_name}}"
+											}));
+		}
+	</script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script>
+    const RequestsSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/user/client/requests'
+        );
+    </script>
+    {% load static %}
+    <script src="{% static 'js/request_websocket.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{% extends 'user/dashboard.html' %}
+
+{% block content %}
+<div class="container">
+            <div class="row headings" style="height:20px;">
+                                <h2 class="py-5 text-center">Let's Find You A Therapist</h2>
+                                <h2 class="pb-5 text-center">Available Therapists:</h2>
+                        <div id="card-list"></div>
+        </div>
+</div>
+{% include 'user/appointment_modal.html' %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% endblock %}

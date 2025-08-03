@@ -1,0 +1,31 @@
+{% extends 'user/dashboard.html' %}
+
+{% block content %}
+<style>
+    .heading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+    }
+</style>
+<div class="container">
+    <div class="row heading">
+        <h2>Clients Requesting Therapy</h2>
+    </div>
+        <div class="row heading">
+                    <div id="client-requests-list"></div>
+    </div>
+</div>
+{% include 'user/decline_request_modal.html' %}
+{% include 'user/accept_request_modal.html' %}
+<script>
+const RequestsSocket = new WebSocket(
+        'ws://'
+        + window.location.host
+        + '/ws/user/client/requests'
+    );
+</script>
+{% load static %}
+<script src="{% static 'js/request_websocket.js' %}"></script>
+{% endblock %}

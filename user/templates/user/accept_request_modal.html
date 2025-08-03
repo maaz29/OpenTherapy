@@ -1,0 +1,43 @@
+<div class="modal fade" id="acceptRequestModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="acceptRequestLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="acceptRequestLabel">Accept Request and Join Chat</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Choose the duration of the therapy session (in minutes):</p>
+                <input type="number" id="durationInput" class="form-control" placeholder="Enter duration">
+                <p>Are you sure you want to accept this requested therapy session?</p>
+      </div>
+      <div class="modal-footer">
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#acceptRequestModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var modal = $(this);
+
+            var clientUsername = button.data('client-username');
+            var durationValue = modal.find('#durationInput');
+
+            modal.find('.modal-footer').html(`
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <form method="post" action="{% url 'accept_request' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="client_username" value="${clientUsername}">
+                    <input type="number" name="session_duration" value="" id="durationInputValue" style="display: none;">
+                    <button type="submit" class="btn btn-success">Join Chat</button>
+            `);
+
+            modal.find('form').on('submit', function () {
+                var durationInput = durationValue.val();
+                modal.find('#durationInputValue').val(durationInput);
+            });
+        });
+    });
+</script>

@@ -1,0 +1,35 @@
+<div class="modal fade" id="cancelRequestModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="cancelRequestLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cancelRequestLabel">Cancel Request</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to cancel your requested therapy session?</p>
+        <p>You will have to request another if you change your mind.</p>
+      </div>
+      <div class="modal-footer">
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#cancelRequestModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var modal = $(this);
+
+            var therapistUsername = button.data('therapist-username');
+
+            modal.find('.modal-footer').html(`
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <form method="post" action="{% url 'cancel_request' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="therapist_username" value="${therapistUsername}">
+                    <button type="submit" class="btn btn-danger">Cancel Request</button>
+            `);
+        });
+    });
+</script>

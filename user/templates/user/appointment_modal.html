@@ -1,0 +1,42 @@
+<div class="modal fade" id="sessionBookingModal" tabindex="-1" aria-labelledby="sessionBookingModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="sessionBookingModalLabel">Request Therapy Session</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+          </div>
+          <div class="modal-footer">
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $('#sessionBookingModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var modal = $(this);
+
+            var therapistFirstName = button.data('therapist-first-name');
+            var therapistLastName = button.data('therapist-last-name');
+            var therapistAge = button.data('therapist-age');
+            var therapistUsername = button.data('therapist-username');
+
+            modal.find('.modal-body').html(`
+                <p>Therapist: ${therapistFirstName} ${therapistLastName}</p>
+                  <p>Age: ${therapistAge}</p>
+                  <p>The therapist will set the duration of the session as per their availability</p>
+                  <p>Please continue if you agree</p>
+            `);
+            modal.find('.modal-footer').html(`
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <form method="post" action="{% url 'client_requests' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="therapist_username" value="${therapistUsername}">
+                    <button type="submit" class="btn btn-primary">Confirm Request</button>
+            `);
+        });
+    });
+</script>
